@@ -1,3 +1,18 @@
+#UB CSE 610
+#Special Topics
+#Deep Learning
+#Stock data Analysis using LSTM
+#Mihir Kulkarni
+#UB Person Number: 5016 8610
+#Email:mihirdha@buffalo.edu
+#Amol Salunkhe
+#Ub Person Number:29612314
+#Email:aas22@buffalo.edu
+#Ref:https://goo.gl/vuLpwa
+#Date: 11 December 2016
+#Req: See requirements.txt for the requirements.
+
+
 #%pylab inline
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -17,7 +32,6 @@ from tensorflow.contrib import layers as tflayers
 
 print(tf.__version__)
 
-#HyperParams
 LOG_DIR = './log'
 TIMESTEPS = 30
 RNN_LAYERS = [{'num_units': 5}]
@@ -27,14 +41,6 @@ PRINT_STEPS = TRAINING_STEPS / 10
 BATCH_SIZE = 100
 
 def rnn_data(data, time_steps, labels=False):
-    """
-    creates new data frame based on previous observation
-      * example:
-        l = [1, 2, 3, 4, 5]
-        time_steps = 2
-        -> labels == False [[1, 2], [2, 3], [3, 4]]
-        -> labels == True [2, 3, 4, 5]
-    """
     rnn_df = []
     for i in range(len(data) - time_steps):
         if labels:
@@ -50,9 +56,6 @@ def rnn_data(data, time_steps, labels=False):
 
 
 def split_data(data, val_size=0.1, test_size=0.1):
-    """
-    splits data to training, validation and testing parts
-    """
     ntest = int(round(len(data) * (1 - test_size)))
     nval = int(round(len(data.iloc[:ntest]) * (1 - val_size)))
 
@@ -61,10 +64,6 @@ def split_data(data, val_size=0.1, test_size=0.1):
     return df_train, df_val, df_test
 
 def prepare_data(data, time_steps, labels=False, val_size=0.1, test_size=0.1):
-    """
-    Given the number of `time_steps` and some data,
-    prepares training, validation and test data for an lstm cell.
-    """
     df_train, df_val, df_test = split_data(data, val_size, test_size)
     return (rnn_data(df_train, time_steps, labels=labels),
             rnn_data(df_val, time_steps, labels=labels),
@@ -89,18 +88,6 @@ def get_stockPriceByDay(symbol):
 
 	
 def lstm_model(num_units, rnn_layers, dense_layers=None, learning_rate=0.1, optimizer='Adagrad'):
-    """
-    Creates a deep model based on:
-        * stacked lstm cells
-        * an optional dense layers
-    :param num_units: the size of the cells.
-    :param rnn_layers: list of int or dict
-                         * list of int: the steps used to instantiate the `BasicLSTMCell` cell
-                         * list of dict: [{steps: int, keep_prob: int}, ...]
-    :param dense_layers: list of nodes for each layer
-    :return: the model definition
-    """
-
     def lstm_cells(layers):
         if isinstance(layers[0], dict):
             return [tf.nn.rnn_cell.DropoutWrapper(tf.nn.rnn_cell.BasicLSTMCell(layer['num_units'],
@@ -135,24 +122,17 @@ def lstm_model(num_units, rnn_layers, dense_layers=None, learning_rate=0.1, opti
 
     return _lstm_model	
 	
-#get the Stock Price Data	
 stockPrices = get_stockPriceByDay('%5EGSPC')
 
-#load the data into the templates for train, validation
 X, y = load_csvdata(stockPrices, TIMESTEPS, seperate=False)
 
-#define the regression model
 regressor = tf.contrib.learn.Estimator(model_fn=lstm_model(TIMESTEPS, RNN_LAYERS, DENSE_LAYERS),model_dir=LOG_DIR)
 
 
-# create a lstm instance and validation monitor
 validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(X['val'], y['val'],every_n_steps=PRINT_STEPS,early_stopping_rounds=1000)
 regressor.fit(X['train'], y['train'],monitors=[validation_monitor],batch_size=BATCH_SIZE,steps=TRAINING_STEPS)
 
 predicted = regressor.predict(X['test'])
-
-#check the deviations using root mean squared error
-#rmse = np.sqrt(((predicted - y['test']) ** 2).mean(axis=0))
 
 print('-------------------------------------------------------------------------------------')
 
