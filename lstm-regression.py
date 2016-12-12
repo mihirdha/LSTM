@@ -8,7 +8,7 @@
 #Amol Salunkhe
 #Ub Person Number:29612314
 #Email:aas22@buffalo.edu
-#Ref:https://goo.gl/vuLpwa
+#Ref:https://goo.gl/Qjc5uE
 #Date: 11 December 2016
 #Req: See requirements.txt for the requirements.
 
@@ -30,15 +30,12 @@ from tensorflow.contrib import learn as tflearn
 from tensorflow.contrib import layers as tflayers
 
 
-print(tf.__version__)
-
-LOG_DIR = './log'
-TIMESTEPS = 30
-RNN_LAYERS = [{'num_units': 5}]
-DENSE_LAYERS = None
-TRAINING_STEPS = 10000
-PRINT_STEPS = TRAINING_STEPS / 10
-BATCH_SIZE = 100
+myDirectory = './log'
+numSteps = 30
+numLayers = [{'num_units': 5}]
+trSteps = 10000
+printSteps = trSteps / 10
+batch = 100
 
 def rnn_data(data, time_steps, labels=False):
     rnn_df = []
@@ -124,13 +121,13 @@ def lstm_model(num_units, rnn_layers, dense_layers=None, learning_rate=0.1, opti
 	
 stockPrices = get_stockPriceByDay('%5EGSPC')
 
-X, y = load_csvdata(stockPrices, TIMESTEPS, seperate=False)
+X, y = load_csvdata(stockPrices, numSteps, seperate=False)
 
-regressor = tf.contrib.learn.Estimator(model_fn=lstm_model(TIMESTEPS, RNN_LAYERS, DENSE_LAYERS),model_dir=LOG_DIR)
+regressor = tf.contrib.learn.Estimator(model_fn=lstm_model(numSteps, numLayers),model_dir=myDirectory)
 
 
-validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(X['val'], y['val'],every_n_steps=PRINT_STEPS,early_stopping_rounds=1000)
-regressor.fit(X['train'], y['train'],monitors=[validation_monitor],batch_size=BATCH_SIZE,steps=TRAINING_STEPS)
+validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(X['val'], y['val'],every_n_steps=printSteps,early_stopping_rounds=1000)
+regressor.fit(X['train'], y['train'],monitors=[validation_monitor],batch_size=batch,steps=trSteps)
 
 predicted = regressor.predict(X['test'])
 
